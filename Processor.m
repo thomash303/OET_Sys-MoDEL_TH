@@ -28,7 +28,6 @@
 % OET documentation <https://github.com/ajay-menon-iitkgp/OET_Sys-MoDEL>.
 
 % Clear workspace and command line
-clear
 clc
 
 %% PreProcessor Script
@@ -58,47 +57,52 @@ clc
 % all degrees of freedom, a matrix transformation removes the non-heave
 % modes for data saved as a matrix.
 
-filename = 'F:\...\rm3.h5';
+filename = 'C:\Users\Thomas\Documents\GitHub\OET_Sys-MoDEL_TH\BEM_Files\rm3.h5';
 
-% Hydrostatics
-rho = h5read(filename,'/simulation_parameters/rho');                          % Density of water
-g = h5read(filename,'/simulation_parameters/g');                              % Acceleration due to gravity
-hydroCoeff.m33 = rho * h5read(filename,'/body1/properties/disp_vol');         % Equilibrium mass
-hydroCoeff.Ainf33 = rho * h5read(filename,'/body1/hydro_coeffs/added_mass/inf_freq',[3 3],[1 1]);           % Infinite-frequency added mass
-hydroCoeff.Khs33 = rho * g * h5read(filename,'/body1/hydro_coeffs/linear_restoring_stiffness',[3 3],[1 1]); % Linear hydrostatic stiffness
+% % Hydrostatics
+% rho = h5read(filename,'/simulation_parameters/rho');                          % Density of water
+% g = h5read(filename,'/simulation_parameters/g');                              % Acceleration due to gravity
+% hydroCoeff.m33 = rho * h5read(filename,'/body1/properties/disp_vol');         % Equilibrium mass
+% hydroCoeff.Ainf33 = rho * h5read(filename,'/body1/hydro_coeffs/added_mass/inf_freq',[3 3],[1 1]);           % Infinite-frequency added mass
+% hydroCoeff.Khs33 = rho * g * h5read(filename,'/body1/hydro_coeffs/linear_restoring_stiffness',[3 3],[1 1]); % Linear hydrostatic stiffness
+% 
+% % Radiation state-space matrices
+% hydroCoeff.ss_rad33.A = h5read(filename,'/body1/hydro_coeffs/radiation_damping/state_space/A/all');   % Time-invariant state-space state matrix
+% hydroCoeff.ss_rad33.B = h5read(filename,'/body1/hydro_coeffs/radiation_damping/state_space/B/all');   % Time-invariant state-space input matrix
+% hydroCoeff.ss_rad33.C = h5read(filename,'/body1/hydro_coeffs/radiation_damping/state_space/C/all');   % Time-invariant state-space output matrix
+% hydroCoeff.ss_rad33.D = h5read(filename,'/body1/hydro_coeffs/radiation_damping/state_space/D/all');   % Time-invariant state-space feed-through matrix
+% 
+% % Excitation coefficients
+% hydroCoeff.w = h5read(filename,'/simulation_parameters/w');                   % Frequency values
+% hydroCoeff.FexcRe2 = h5read(filename,'/body1/hydro_coeffs/excitation/re');    % Real component of wave excitation force coefficient
+% hydroCoeff.FexcIm2 = h5read(filename,'/body1/hydro_coeffs/excitation/im');    % Imaginary component of wave excitation force coefficient
+% 
+% % Matrix transformation to remove non-heave modes
+% hydroCoeff.ss_rad33.A = squeeze(hydroCoeff.ss_rad33.A(:,:,3,3));
+% hydroCoeff.ss_rad33.B = squeeze(hydroCoeff.ss_rad33.B(:,:,3,3));
+% hydroCoeff.ss_rad33.C = squeeze(hydroCoeff.ss_rad33.C(:,:,3,3));
+% hydroCoeff.ss_rad33.D = squeeze(hydroCoeff.ss_rad33.D(3,3));
+% 
+% hydroCoeff.FexcRe(1,:) = hydroCoeff.FexcRe2(:,:,3);
+% hydroCoeff.FexcIm(1,:) = hydroCoeff.FexcIm2(:,:,3);
+% 
+% % Strip rows and columns with all 0 values
+% hydroCoeff.ss_rad33.A( ~any(hydroCoeff.ss_rad33.A,2), : ) = [];  % SS matrix A - rows
+% hydroCoeff.ss_rad33.A( :, ~any(hydroCoeff.ss_rad33.A,1) ) = [];  % SS matrix A - columns
+% 
+% hydroCoeff.ss_rad33.B( ~any(hydroCoeff.ss_rad33.B,2), : ) = [];  % SS matrix B - rows
+% hydroCoeff.ss_rad33.B( :, ~any(hydroCoeff.ss_rad33.B,1) ) = [];  % SS matrix B - columns
+% 
+% hydroCoeff.ss_rad33.C( ~any(hydroCoeff.ss_rad33.C,2), : ) = [];  % SS matrix C - rows
+% hydroCoeff.ss_rad33.C( :, ~any(hydroCoeff.ss_rad33.C,1) ) = [];  % SS matrix C - columns
+% 
+% hydroCoeff.ss_rad33.D( ~any(hydroCoeff.ss_rad33.D,2), : ) = [];  % SS matrix D - rows
+% hydroCoeff.ss_rad33.D( :, ~any(hydroCoeff.ss_rad33.D,1) ) = [];  % SS matrix D - columns
 
-% Radiation state-space matrices
-hydroCoeff.ss_rad33.A = h5read(filename,'/body1/hydro_coeffs/radiation_damping/state_space/A/all');   % Time-invariant state-space state matrix
-hydroCoeff.ss_rad33.B = h5read(filename,'/body1/hydro_coeffs/radiation_damping/state_space/B/all');   % Time-invariant state-space input matrix
-hydroCoeff.ss_rad33.C = h5read(filename,'/body1/hydro_coeffs/radiation_damping/state_space/C/all');   % Time-invariant state-space output matrix
-hydroCoeff.ss_rad33.D = h5read(filename,'/body1/hydro_coeffs/radiation_damping/state_space/D/all');   % Time-invariant state-space feed-through matrix
-
-% Excitation coefficients
-hydroCoeff.w = h5read(filename,'/simulation_parameters/w');                   % Frequency values
-hydroCoeff.FexcRe2 = h5read(filename,'/body1/hydro_coeffs/excitation/re');    % Real component of wave excitation force coefficient
-hydroCoeff.FexcIm2 = h5read(filename,'/body1/hydro_coeffs/excitation/im');    % Imaginary component of wave excitation force coefficient
-
-% Matrix transformation to remove non-heave modes
-hydroCoeff.ss_rad33.A = squeeze(hydroCoeff.ss_rad33.A(:,:,3,3));
-hydroCoeff.ss_rad33.B = squeeze(hydroCoeff.ss_rad33.B(:,:,3,3));
-hydroCoeff.ss_rad33.C = squeeze(hydroCoeff.ss_rad33.C(:,:,3,3));
-hydroCoeff.ss_rad33.D = squeeze(hydroCoeff.ss_rad33.D(3,3));
-
-hydroCoeff.FexcRe(1,:) = hydroCoeff.FexcRe2(:,:,3);
-hydroCoeff.FexcIm(1,:) = hydroCoeff.FexcIm2(:,:,3);
-
-% Strip rows and columns with all 0 values
-hydroCoeff.ss_rad33.A( ~any(hydroCoeff.ss_rad33.A,2), : ) = [];  % SS matrix A - rows
-hydroCoeff.ss_rad33.A( :, ~any(hydroCoeff.ss_rad33.A,1) ) = [];  % SS matrix A - columns
-
-hydroCoeff.ss_rad33.B( ~any(hydroCoeff.ss_rad33.B,2), : ) = [];  % SS matrix B - rows
-hydroCoeff.ss_rad33.B( :, ~any(hydroCoeff.ss_rad33.B,1) ) = [];  % SS matrix B - columns
-
-hydroCoeff.ss_rad33.C( ~any(hydroCoeff.ss_rad33.C,2), : ) = [];  % SS matrix C - rows
-hydroCoeff.ss_rad33.C( :, ~any(hydroCoeff.ss_rad33.C,1) ) = [];  % SS matrix C - columns
-
-hydroCoeff.ss_rad33.D( ~any(hydroCoeff.ss_rad33.D,2), : ) = [];  % SS matrix D - rows
-hydroCoeff.ss_rad33.D( :, ~any(hydroCoeff.ss_rad33.D,1) ) = [];  % SS matrix D - columns
+added_mass = h5read(filename,'/body1/hydro_coeffs/added_mass/all');  
+radiation_damping = h5read(filename,'/body1/hydro_coeffs/radiation_damping/all');
+hydroCoeff.added_mass = added_mass(:,3,3)*rho - hydroCoeff.Ainf33; % Frequency dependent added mass (only)
+hydroCoeff.radiation_damping = radiation_damping(:,3,3)*rho.*hydroCoeff.w'; % Radiation damping
 
 % Export the MATLAB structure.
 save('hydroCoeff.mat')

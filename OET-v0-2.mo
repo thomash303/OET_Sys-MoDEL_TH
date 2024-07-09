@@ -377,6 +377,22 @@ package OceanEngineeringToolbox
       parameter Modelica.Units.SI.Mass Ainf = scalar(Modelica.Utilities.Streams.readRealMatrix(fileName, "hydroCoeff.Ainf33", 1, 1)) "Added mass at maximum (cut-off) frequency";
       parameter Modelica.Units.SI.TranslationalSpringConstant Khs = scalar(Modelica.Utilities.Streams.readRealMatrix(fileName, "hydroCoeff.Khs33", 1, 1)) "Hydrostatic stiffness";
       
+      /* Frequency domain function parameters */
+      parameter Integer wDims[:] = Modelica.Utilities.Streams.readMatrixSize(fileName, "hydroCoeff.w");
+        parameter Integer wSize = wDims[2];
+      parameter Real Adep[:] = vector(Modelica.Utilities.Streams.readRealMatrix(fileName, "hydroCoeff.added_mass",wSize,1)) "Frequency dependent added mass";
+       parameter Real Rdamp[:] = vector(Modelica.Utilities.Streams.readRealMatrix(fileName, "hydroCoeff.radiation_damping",wSize,1)) "Radiation damping";
+       parameter Real w[:] = vector(Modelica.Utilities.Streams.readRealMatrix(fileName, "hydroCoeff.w", 1, wSize));
+       Modelica.Units.SI.Mass amdep = Modelica.Math.Vectors.interpolate(w, Adep, omega_peak);
+       Modelica.Units.SI.TranslationalDampingConstant Bpto = Modelica.Math.Vectors.interpolate(w, Rdamp, omega_peak);
+       Modelica.Units.SI.TranslationalSpringConstant Kpto;
+       Modelica.Units.SI.Mass Mpto;
+       parameter Modelica.Units.SI.AngularFrequency omega_peak = 0.94 "Peak spectral frequency";
+       Modelica.Units.SI.Force Fpto;
+       Modelica.Units.SI.Power Ppto;
+       Modelica.Blocks.Math.ContinuousMean Ppto_avg;
+      
+    
       parameter Real A1[2, 2] = Modelica.Utilities.Streams.readRealMatrix(fileName, "hydroCoeff.ss_rad33.A", 2, 2) "State matrix";
       parameter Real B1[2, 1] = Modelica.Utilities.Streams.readRealMatrix(fileName, "hydroCoeff.ss_rad33.B", 2, 1) "Input matrix";
       parameter Real C1[1, 2] = Modelica.Utilities.Streams.readRealMatrix(fileName, "hydroCoeff.ss_rad33.C", 1, 2) "Output matrix";
@@ -401,11 +417,24 @@ package OceanEngineeringToolbox
       F_rad = scalar(C1*x) + (D1*v_z);
   
       /* Assemble Cummins' equation */
-      ((M + Ainf)*a_z) + F_rad + (Khs*z) = wconn.F_exc;
+      ((M+Ainf)*a_z) + F_rad + (Khs*z) + Fpto = wconn.F_exc;
   
       /* Connector declarations */
       conn.F_rad = F_rad;
       conn.v_z = v_z;
+      
+      /* PTO Addition */
+      Mpto = M + Ainf + amdep;
+      /*Fpto =  Kpto*z+Bpto*v_z;A*/
+      Fpto = Kpto*v_z;
+      /*Fpto = -Mpto*a_z + Bpto*v_z + Kpto*z;c*/
+      Ppto = Fpto*v_z;
+      Ppto_avg.u = Ppto;
+      /*Kpto = -Khs;c*/
+      Kpto = (Bpto^2+(omega_peak*(Mpto)-Khs/omega_peak)^2)^(1/2);
+      /*Kpto = (Mpto)*omega_peak-Khs/omega_peak;A*/
+     
+      
     end RigidBody;
 
   end Structures;
@@ -561,7 +590,7 @@ package OceanEngineeringToolbox
     model TestDevelopment
       /* Model to test all wave components and WEC rigid body */
       
-      parameter String filePath = "D:/.../hydroCoeff.mat";
+        parameter String filePath = "C:/Users/Thomas/Documents/GitHub/OET_Sys-MoDEL_TH/hydroCoeff.ma";
       OceanEngineeringToolbox.WaveProfile.RegularWave.LinearWave Reg1(fileName = filePath, Hs = 2.5, Trmp = 50);
       OceanEngineeringToolbox.WaveProfile.IrregularWave.PiersonMoskowitzWave Irr1(fileName = filePath, Hs = 2.5, n_omega = 100, Trmp = 50);
       OceanEngineeringToolbox.WaveProfile.IrregularWave.BretschneiderWave Irr2(fileName = filePath, Hs = 2.5, n_omega = 100, Trmp = 50);
@@ -589,7 +618,8 @@ package OceanEngineeringToolbox
     model sample1
       /* Single body, regular waves */
       
-      parameter String filePath = "D:/.../hydroCoeff.mat";
+      parameter String filePath = "C:/Users/Thomas/Documents/GitHub/OET_Sys-MoDEL_TH/hydroCoeff.mat";
+      /*  parameter String filePath = "C:/Users/Thomas/Downloads/hydroCoeff.mat"; */
       OceanEngineeringToolbox.WaveProfile.RegularWave.LinearWave Reg1(fileName = filePath, Hs = 2.5, Trmp = 50);
       OceanEngineeringToolbox.Structures.RigidBody Body1(fileName = filePath);
     equation
@@ -602,7 +632,7 @@ package OceanEngineeringToolbox
     model sample2
       /* Single body, irregular waves with PM spectrum */
       
-      parameter String filePath = "D:/...hydroCoeff.mat";
+      parameter String filePath = "C:/Users/Thomas/Documents/GitHub/OET_Sys-MoDEL_TH/hydroCoeff.mat";
       OceanEngineeringToolbox.WaveProfile.IrregularWave.PiersonMoskowitzWave PM1(fileName = filePath, Hs = 2.5, n_omega = 100, Trmp = 100);
       OceanEngineeringToolbox.Structures.RigidBody Body1(fileName = filePath);
     equation
