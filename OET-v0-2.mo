@@ -396,6 +396,7 @@ package OceanEngineeringToolbox
       parameter Real A1[2, 2] = Modelica.Utilities.Streams.readRealMatrix(fileName, "hydroCoeff.ss_rad33.A", 2, 2) "State matrix";
       parameter Real B1[2, 1] = Modelica.Utilities.Streams.readRealMatrix(fileName, "hydroCoeff.ss_rad33.B", 2, 1) "Input matrix";
       parameter Real C1[1, 2] = Modelica.Utilities.Streams.readRealMatrix(fileName, "hydroCoeff.ss_rad33.C", 1, 2) "Output matrix";
+      
       parameter Real D1 = scalar(Modelica.Utilities.Streams.readRealMatrix(fileName, "hydroCoeff.ss_rad33.D", 1, 1)) "Feed matrix";
       Real x[2,1] "State-space intermediate variables";
       Modelica.Units.SI.Length z "Heave displacement";
@@ -618,7 +619,7 @@ package OceanEngineeringToolbox
     model sample1
       /* Single body, regular waves */
       
-      parameter String filePath = "C:/Users/Thomas/Documents/GitHub/OET_Sys-MoDEL_TH/hydroCoeff.mat";
+      parameter String filePath = "C:/Users/Thomas/Documents/GitHub/OET_Sys-MoDEL_TH/hydroCoeffdebug.mat";
       /*  parameter String filePath = "C:/Users/Thomas/Downloads/hydroCoeff.mat"; */
       OceanEngineeringToolbox.WaveProfile.RegularWave.LinearWave Reg1(fileName = filePath, Hs = 2.5, Trmp = 50);
       OceanEngineeringToolbox.Structures.RigidBody Body1(fileName = filePath);
